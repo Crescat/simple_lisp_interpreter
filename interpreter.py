@@ -1,11 +1,3 @@
-problems = [
-  #['let', 'x', ['+', 1, 2], 'x'], 
-  [['lambda', ['a', 'b'], ['+', 'a', 'b']], 4, 6],
-  ['if', 0, 1, 2],
-  ['equal', 1, 2],
-  ['equal', ['-', 9, 2], 7],
-]
-
 
 def is_syntax(expr):
   return expr[0] in ['lambda', 'let', 'if', 'equal']
@@ -13,16 +5,17 @@ def is_syntax(expr):
 
 def eval_syntax(expr, env):
   if expr[0] == 'lambda':
-    return {'arguments':expr[1], 'expression':expr[2]}
+    return {'arguments':expr[1], 'expression':expr[2], 'env': env}
 
   if expr[0] == 'let':
     new_env = dict(list(env.items()) + [(expr[1], eval(expr[2], env))])
     return eval(expr[3], new_env)
   
   if expr[0] == 'if':
-    if expr[1] == 1:
+    condition = eval(expr[1], env)
+    if condition == 1:
       return eval(expr[2], env)
-    elif expr[1] == 0:
+    elif condition == 0:
       return eval(expr[3], env)
     else:
       print('error')
@@ -52,9 +45,9 @@ def eval(expr, env):
   if type(operator) is dict:  # is lambda
     a = operator['arguments']
     e = operator['expression']
-    new_env = dict(list(env.items()) + list(zip(a, args)))
+    env_ = operator['env']
+    new_env = dict(list(env_.items()) + list(zip(a, args)))
     return eval(e, new_env)
-  
   
   if operator == '+':
     return sum(args)
@@ -69,5 +62,20 @@ def eval(expr, env):
     return args[0] - sum(args[1:])
 
 
-for p in problems:
-  print(eval(p, {}))
+m = ["lambda", "a", ["b", ["lambda", "x", [["a", "a"], "x"]]]]
+y = ["lambda", "b", [m, m]]
+
+def factorial(x):
+  fac = ['lambda', 'f', 
+          ['lambda', 'n',
+            ['if', ['equal', 'n', 0], 
+              1, 
+              ['*', 'n', ['f', ['-', 'n', 1]]]]]]
+  return eval([[y, fac], x], {})
+
+
+
+# References: 
+# 
+# - https://mvanier.livejournal.com/2897.html
+# - https://rosettacode.org/wiki/Y_combinator
